@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard · LinkLab</title>
+  <meta name="description" content="Every short link on this LinkLab service, with live visit counts.">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/static/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/theme.js"></script>
+  <script src="/static/app.js" defer></script>
+</head>
+<body data-page="dashboard">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/" aria-label="LinkLab home">
+        <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect class="logo-bg" width="32" height="32" rx="8"/><path class="logo-fg" d="M13.6 18.4a4 4 0 0 0 5.66 0l2.83-2.83a4 4 0 0 0-5.66-5.66l-.71.71M18.4 13.6a4 4 0 0 0-5.66 0l-2.83 2.83a4 4 0 0 0 5.66 5.66l.71-.71" fill="none" stroke-width="2.2" stroke-linecap="round"/><circle class="logo-dot" cx="25" cy="7" r="2.4"/></svg>
+        LinkLab
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="/">Shorten</a>
+        <a href="/dashboard" aria-current="page">Dashboard</a>
+        <a href="/how-it-works">How it works</a>
+      </nav>
+      <div class="header-right">
+        <a class="header-link" href="/docs" target="_blank" rel="noopener"><span class="label-text">API docs</span><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-external"/></svg></a>
+        <span class="status-pill" id="health" data-state="loading" role="status"><span class="dot" aria-hidden="true"></span><span class="label-text">Connecting</span></span>
+        <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" data-tip="Theme" data-tip-below>
+          <svg class="icon i-sun" aria-hidden="true"><use href="/static/icons.svg#i-sun"/></svg>
+          <svg class="icon i-moon" aria-hidden="true"><use href="/static/icons.svg#i-moon"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="container" tabindex="-1">
+    <div class="page-head">
+      <div>
+        <h1>Dashboard</h1>
+        <p>Every short link on this service, with live visit counts.</p>
+      </div>
+      <a class="btn btn-primary" href="/"><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-plus"/></svg>New short link</a>
+    </div>
+
+    <section class="card stat-grid" id="stat-grid" aria-label="Summary" aria-busy="true">
+      <div class="stat">
+        <p class="stat-label"><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-link"/></svg>Short links</p>
+        <p class="stat-value" id="stat-total">0</p>
+        <p class="stat-sub" id="stat-total-sub">Stored in SQLite</p>
+      </div>
+      <div class="stat">
+        <p class="stat-label"><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-cursor"/></svg>Total visits</p>
+        <p class="stat-value" id="stat-clicks">0</p>
+        <p class="stat-sub">Redirects served</p>
+      </div>
+      <div class="stat">
+        <p class="stat-label"><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-clock"/></svg>Created today</p>
+        <p class="stat-value" id="stat-recent">0</p>
+        <p class="stat-sub">In the last 24 hours</p>
+      </div>
+      <div class="stat">
+        <p class="stat-label"><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-trophy"/></svg>Most visited</p>
+        <p class="stat-value is-code" id="stat-top">—</p>
+        <p class="stat-sub" id="stat-top-sub">No visits yet</p>
+      </div>
+    </section>
+
+    <section class="card table-card" aria-labelledby="links-title">
+      <div class="table-head">
+        <div>
+          <h2 id="links-title">All links</h2>
+          <p class="sub" id="links-count" aria-live="polite">Loading…</p>
+        </div>
+        <div class="toolbar">
+          <div class="search">
+            <svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-search"/></svg>
+            <label for="search" class="visually-hidden">Search links</label>
+            <input class="input" id="search" type="search" placeholder="Search alias or URL" autocomplete="off">
+          </div>
+          <label for="sort" class="visually-hidden">Sort links</label>
+          <select id="sort">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="clicks">Most visits</option>
+            <option value="alias">Alias A–Z</option>
+          </select>
+          <button type="button" class="btn btn-icon" id="refresh" aria-label="Refresh" data-tip="Refresh" data-tip-below>
+            <svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-refresh"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="table-state" class="table-state" role="status"></div>
+      <div class="table-wrap">
+        <table class="links-table" id="links-table" hidden>
+          <thead>
+            <tr>
+              <th scope="col">Short link</th>
+              <th scope="col">Visits</th>
+              <th scope="col">Created</th>
+              <th scope="col">Status</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="links-body"></tbody>
+        </table>
+      </div>
+      <p class="table-note">
+        <svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-info"/></svg>
+        Links are stored in memory and reset when the service restarts.
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span class="footer-brand">
+        <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect class="logo-bg" width="32" height="32" rx="8"/><path class="logo-fg" d="M13.6 18.4a4 4 0 0 0 5.66 0l2.83-2.83a4 4 0 0 0-5.66-5.66l-.71.71M18.4 13.6a4 4 0 0 0-5.66 0l-2.83 2.83a4 4 0 0 0 5.66 5.66l.71-.71" fill="none" stroke-width="2.2" stroke-linecap="round"/><circle class="logo-dot" cx="25" cy="7" r="2.4"/></svg>
+        LinkLab · URL Shortener Service
+      </span>
+      <span class="footer-stack"><span>FastAPI</span><span>SQLite in-memory</span><span>Single Docker container</span></span>
+      <span class="footer-links"><a href="/docs" target="_blank" rel="noopener">API docs</a><a href="/health" target="_blank" rel="noopener">Health</a></span>
+    </div>
+  </footer>
+
+  <dialog id="delete-dialog" class="dialog" aria-labelledby="delete-title">
+    <form method="dialog">
+      <h2 id="delete-title">Delete short link?</h2>
+      <p><code id="delete-code" class="code-pill"></code> will stop redirecting immediately and its visits will be lost.</p>
+      <div class="dialog-actions">
+        <button class="btn btn-secondary" value="cancel" autofocus>Cancel</button>
+        <button class="btn btn-danger" value="confirm" id="delete-confirm">Delete</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="qr-dialog" class="dialog dialog-qr" aria-labelledby="qr-title">
+    <form method="dialog">
+      <h2 id="qr-title">QR code</h2>
+      <p>Scan with a phone camera to open the short link.</p>
+      <img id="qr-image" width="200" height="200" alt="">
+      <p class="qr-url" id="qr-url"></p>
+      <div class="dialog-actions center">
+        <a class="btn btn-secondary" id="qr-download" download><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-download"/></svg>Download</a>
+        <button class="btn btn-primary" value="close">Done</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+</body>
+</html>

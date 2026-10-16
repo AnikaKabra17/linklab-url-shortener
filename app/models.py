@@ -20,7 +20,8 @@ RESERVED_CODES = frozenset(
     {
         "api", "app", "admin", "assets", "docs", "redoc", "openapi", "health",
         "healthz", "static", "shorten", "url", "urls", "favicon", "robots",
-        "sitemap", "index", "login", "logout", "about", "help",
+        "sitemap", "index", "login", "logout", "about", "help", "dashboard",
+        "how-it-works", "architecture",
     }
 )
 

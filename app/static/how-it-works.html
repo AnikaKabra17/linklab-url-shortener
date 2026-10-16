@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How it works · LinkLab</title>
+  <meta name="description" content="The brief, architecture and request flow behind LinkLab, a minimal URL shortener on in-memory SQLite in a single container.">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/static/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/theme.js"></script>
+  <script src="/static/app.js" defer></script>
+</head>
+<body data-page="how">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/" aria-label="LinkLab home">
+        <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect class="logo-bg" width="32" height="32" rx="8"/><path class="logo-fg" d="M13.6 18.4a4 4 0 0 0 5.66 0l2.83-2.83a4 4 0 0 0-5.66-5.66l-.71.71M18.4 13.6a4 4 0 0 0-5.66 0l-2.83 2.83a4 4 0 0 0 5.66 5.66l.71-.71" fill="none" stroke-width="2.2" stroke-linecap="round"/><circle class="logo-dot" cx="25" cy="7" r="2.4"/></svg>
+        LinkLab
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="/">Shorten</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/how-it-works" aria-current="page">How it works</a>
+      </nav>
+      <div class="header-right">
+        <a class="header-link" href="/docs" target="_blank" rel="noopener"><span class="label-text">API docs</span><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-external"/></svg></a>
+        <span class="status-pill" id="health" data-state="loading" role="status"><span class="dot" aria-hidden="true"></span><span class="label-text">Connecting</span></span>
+        <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" data-tip="Theme" data-tip-below>
+          <svg class="icon i-sun" aria-hidden="true"><use href="/static/icons.svg#i-sun"/></svg>
+          <svg class="icon i-moon" aria-hidden="true"><use href="/static/icons.svg#i-moon"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="container" tabindex="-1">
+    <div class="page-head">
+      <div>
+        <h1>How LinkLab works</h1>
+        <p>The brief, the architecture and the request flow, with live data from this running instance.</p>
+      </div>
+      <a class="btn btn-secondary" href="/docs" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-code"/></svg>Try the API</a>
+    </div>
+
+    <!-- 1. The brief -->
+    <section aria-labelledby="brief-title">
+      <h2 id="brief-title" class="visually-hidden">The brief</h2>
+      <div class="brief">
+        <article class="card brief-card">
+          <p class="kicker">Problem statement</p>
+          <blockquote>A minimal service to redirect long URLs to short aliases.</blockquote>
+          <ul>
+            <li><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-check"/></svg><span><code>POST /shorten</code> turns a long URL into a unique short alias.</span></li>
+            <li><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-check"/></svg><span><code>GET /{alias}</code> answers with a real HTTP 307 redirect.</span></li>
+            <li><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-check"/></svg><span>Custom aliases, expiry, visit counts and QR codes.</span></li>
+          </ul>
+        </article>
+        <article class="card brief-card">
+          <p class="kicker">Architecture</p>
+          <blockquote>A lightweight API using an in-memory SQLite database inside a single container.</blockquote>
+          <ul>
+            <li><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-check"/></svg><span>FastAPI serves the API, these pages and every redirect.</span></li>
+            <li><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-check"/></svg><span>SQLite runs as <code>:memory:</code>, with no database file.</span></li>
+            <li><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-check"/></svg><span>One Docker image, one process, port 8000.</span></li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- 2. Architecture diagram -->
+    <section class="section" aria-labelledby="arch-title">
+      <div class="section-head">
+        <p class="kicker">Architecture</p>
+        <h2 id="arch-title">Everything runs in one container</h2>
+      </div>
+      <div class="card arch" role="img" aria-label="Diagram: a browser or API client sends HTTP requests to a single Docker container. Inside, Uvicorn and FastAPI serve the web UI, the REST API and redirects, all backed by one in-memory SQLite database.">
+        <div class="node">
+          <strong><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-globe"/></svg>Browser or API client</strong>
+          <span>Web UI, curl, Swagger UI</span>
+        </div>
+        <div class="connector"><span>HTTP :8000</span></div>
+        <div class="container-box">
+          <span class="container-label"><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-box"/></svg>Single Docker container</span>
+          <div class="stack">
+            <div class="node">
+              <strong><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-server"/></svg>Uvicorn · FastAPI</strong>
+              <span>One worker process</span>
+            </div>
+            <div class="stack-row">
+              <div class="node">
+                <strong><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-layout"/></svg>Web UI</strong>
+                <code>/ · /dashboard</code>
+              </div>
+              <div class="node">
+                <strong><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-code"/></svg>REST API</strong>
+                <code>/shorten · /urls · /url/{alias}</code>
+              </div>
+              <div class="node">
+                <strong><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-redirect"/></svg>Redirect</strong>
+                <code>/{alias} → 307</code>
+              </div>
+            </div>
+            <div class="down" aria-hidden="true"></div>
+            <div class="node is-db">
+              <strong><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-database"/></svg>SQLite <code>:memory:</code></strong>
+              <span>One shared connection, guarded by a lock. Table <code>urls</code>: alias, long URL, created, visits, expiry.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Request flow -->
+    <section class="section" aria-labelledby="flow-title">
+      <div class="section-head">
+        <p class="kicker">Request flow</p>
+        <h2 id="flow-title">Life of a short link</h2>
+      </div>
+      <div class="steps-2">
+        <article class="card timeline-card">
+          <h3><span class="method m-post">POST</span>Create · <code>/shorten</code></h3>
+          <ol class="timeline">
+            <li><span><strong>Validate the long URL</strong>http or https only, a real hostname, up to 2,048 characters.</span></li>
+            <li><span><strong>Choose the alias</strong>Your custom alias, or 7 random characters from a secure generator.</span></li>
+            <li><span><strong>Store it in SQLite</strong>The primary key guarantees every alias is unique.</span></li>
+            <li><span><strong>Return 201 Created</strong>The short link, ready to share.</span></li>
+          </ol>
+        </article>
+        <article class="card timeline-card">
+          <h3><span class="method m-get">GET</span>Redirect · <code>/{alias}</code></h3>
+          <ol class="timeline">
+            <li><span><strong>Look up the alias</strong>A single indexed query against SQLite.</span></li>
+            <li><span><strong>Check expiry</strong>Expired links return 410 and never redirect.</span></li>
+            <li><span><strong>Count the visit</strong>In the same transaction, so no visit is lost.</span></li>
+            <li><span><strong>Return 307 Redirect</strong>The browser goes straight to the long URL.</span></li>
+          </ol>
+        </article>
+      </div>
+    </section>
+
+    <!-- 4. API -->
+    <section class="section" aria-labelledby="api-title">
+      <div class="section-head">
+        <p class="kicker">API</p>
+        <h2 id="api-title">Endpoints</h2>
+        <p>Every action in the interface uses these endpoints. Try them in the <a href="/docs" target="_blank" rel="noopener">interactive API docs</a>.</p>
+      </div>
+      <div class="card table-card">
+        <div class="table-wrap">
+          <table class="api-table">
+            <tbody>
+              <tr><td><span class="method m-post">POST</span></td><td class="path">/shorten</td><td class="desc">Create a short link</td><td class="code">201</td></tr>
+              <tr><td><span class="method m-get">GET</span></td><td class="path">/{alias}</td><td class="desc">Redirect to the long URL</td><td class="code">307</td></tr>
+              <tr><td><span class="method m-get">GET</span></td><td class="path">/url/{alias}</td><td class="desc">Link details and visits</td><td class="code">200</td></tr>
+              <tr><td><span class="method m-get">GET</span></td><td class="path">/url/{alias}/qr</td><td class="desc">QR code (SVG)</td><td class="code">200</td></tr>
+              <tr><td><span class="method m-del">DELETE</span></td><td class="path">/url/{alias}</td><td class="desc">Delete a link</td><td class="code">204</td></tr>
+              <tr><td><span class="method m-get">GET</span></td><td class="path">/urls</td><td class="desc">All links, newest first</td><td class="code">200</td></tr>
+              <tr><td><span class="method m-get">GET</span></td><td class="path">/api/analytics/summary</td><td class="desc">Dashboard totals</td><td class="code">200</td></tr>
+              <tr><td><span class="method m-get">GET</span></td><td class="path">/health</td><td class="desc">Service and database health</td><td class="code">200</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Live status -->
+    <section class="section" aria-labelledby="live-title">
+      <div class="section-head">
+        <p class="kicker">Live</p>
+        <h2 id="live-title">This instance, right now</h2>
+      </div>
+      <dl class="card live" id="live-status">
+        <div><dt>Service</dt><dd><span class="dot" id="live-dot"></span><span id="live-health">Checking…</span></dd></div>
+        <div><dt>Storage</dt><dd id="live-storage">—</dd></div>
+        <div><dt>Short links stored</dt><dd id="live-links">—</dd></div>
+        <div><dt>Total visits</dt><dd id="live-visits">—</dd></div>
+      </dl>
+      <p class="callout">
+        <svg class="icon" aria-hidden="true"><use href="/static/icons.svg#i-info"/></svg>
+        <span><strong>In-memory by design.</strong> Links live in RAM inside the container, so they are cleared whenever it restarts. That is the expected behaviour of the required architecture.</span>
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span class="footer-brand">
+        <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect class="logo-bg" width="32" height="32" rx="8"/><path class="logo-fg" d="M13.6 18.4a4 4 0 0 0 5.66 0l2.83-2.83a4 4 0 0 0-5.66-5.66l-.71.71M18.4 13.6a4 4 0 0 0-5.66 0l-2.83 2.83a4 4 0 0 0 5.66 5.66l.71-.71" fill="none" stroke-width="2.2" stroke-linecap="round"/><circle class="logo-dot" cx="25" cy="7" r="2.4"/></svg>
+        LinkLab · URL Shortener Service
+      </span>
+      <span class="footer-stack"><span>FastAPI</span><span>SQLite in-memory</span><span>Single Docker container</span></span>
+      <span class="footer-links"><a href="/docs" target="_blank" rel="noopener">API docs</a><a href="/health" target="_blank" rel="noopener">Health</a></span>
+    </div>
+  </footer>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+</body>
+</html>

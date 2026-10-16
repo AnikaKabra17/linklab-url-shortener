@@ -109,7 +109,8 @@ def test_invalid_aliases_are_rejected(client, alias):
     assert response.json()["errors"][0]["field"] == "custom_alias"
 
 
-@pytest.mark.parametrize("alias", ["health", "docs", "DOCS", "redoc", "static", "urls", "url", "api", "shorten"])
+@pytest.mark.parametrize("alias", ["health", "docs", "DOCS", "redoc", "static", "urls", "url", "api", "shorten",
+                                   "dashboard", "how-it-works"])
 def test_reserved_aliases_are_rejected(client, alias):
     response = shorten(client, custom_alias=alias)
     assert response.status_code == 422
@@ -499,11 +500,14 @@ def test_reserved_routes_are_not_treated_as_short_codes(client):
 
 
 def test_frontend_is_served(client):
-    page = client.get("/")
-    assert page.status_code == 200
-    assert "LinkLab" in page.text
+    for path, marker in [("/", "Long URLs in."), ("/dashboard", "All links"), ("/how-it-works", "Problem statement")]:
+        page = client.get(path)
+        assert page.status_code == 200, path
+        assert "LinkLab" in page.text and marker in page.text, path
+        assert "default-src 'self'" in page.headers["content-security-policy"]
     for asset, media in [("/static/app.js", "javascript"), ("/static/styles.css", "text/css"),
-                         ("/static/favicon.svg", "image/svg+xml"), ("/static/fonts/inter-latin.woff2", "font/woff2")]:
+                         ("/static/favicon.svg", "image/svg+xml"), ("/static/fonts/inter-latin.woff2", "font/woff2"),
+                         ("/static/icons.svg", "image/svg+xml"), ("/static/theme.js", "javascript")]:
         response = client.get(asset)
         assert response.status_code == 200, asset
         assert media in response.headers["content-type"]

@@ -270,6 +270,14 @@ def create_app(
     def index():
         return FileResponse(STATIC_DIR / "index.html")
 
+    @app.get("/dashboard", include_in_schema=False)
+    def dashboard():
+        return FileResponse(STATIC_DIR / "dashboard.html")
+
+    @app.get("/how-it-works", include_in_schema=False)
+    def how_it_works():
+        return FileResponse(STATIC_DIR / "how-it-works.html")
+
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
     # ----------------------------------------------------------------- redirect
@@ -294,12 +302,11 @@ def create_app(
             destination = services.resolve_redirect(request.app.state.db, short_code, request.app.state.clock())
         except services.LinkNotFound:
             return _error_page(request, 404, "Link not found",
-                               f"There is no short link called “{short_code}”. Check the spelling, or it may "
-                               "have been deleted. Links are also cleared whenever the service restarts.")
+                               f"No short link uses the alias “{short_code}”. It may have been deleted, "
+                               "or the service restarted (links are stored in memory).")
         except services.LinkExpired:
             return _error_page(request, 410, "This link has expired",
-                               f"The short link “{short_code}” was set to stop working after a certain time, "
-                               "so it no longer opens its destination.")
+                               f"The short link “{short_code}” reached its expiry time and no longer redirects.")
         # 307 = temporary: browsers must come back each time, so every visit is counted.
         return RedirectResponse(destination, status_code=307, headers={"Cache-Control": "no-store"})
 
@@ -314,11 +321,12 @@ ERROR_PAGE = """<!doctype html>
 <title>{title} · LinkLab</title>
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/static/styles.css">
+<script src="/static/theme.js"></script>
 </head>
 <body class="status-page">
 <main class="status-card">
-  <svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs><rect width="40" height="40" rx="11" fill="url(#g)"/><path d="M17.5 22.5a5 5 0 0 0 7.07 0l3.54-3.54a5 5 0 0 0-7.07-7.07l-1.06 1.06M22.5 17.5a5 5 0 0 0-7.07 0l-3.54 3.54a5 5 0 0 0 7.07 7.07l1.06-1.06" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>
-  <p class="status-code">Error {status}</p>
+  <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect class="logo-bg" width="32" height="32" rx="8"/><path class="logo-fg" d="M13.6 18.4a4 4 0 0 0 5.66 0l2.83-2.83a4 4 0 0 0-5.66-5.66l-.71.71M18.4 13.6a4 4 0 0 0-5.66 0l-2.83 2.83a4 4 0 0 0 5.66 5.66l.71-.71" fill="none" stroke-width="2.2" stroke-linecap="round"/><circle class="logo-dot" cx="25" cy="7" r="2.4"/></svg>
+  <p class="status-code">HTTP {status}</p>
   <h1>{title}</h1>
   <p>{message}</p>
   <a class="btn btn-primary" href="/">Create a new short link</a>
