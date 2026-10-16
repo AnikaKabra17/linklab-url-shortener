@@ -3,17 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LinkLab — URL Shortener Service</title>
-  <meta name="description" content="LinkLab turns long URLs into short aliases that redirect through a lightweight FastAPI service.">
-  <meta name="color-scheme" content="light dark">
+  <title>LinkLab — Short links that redirect instantly</title>
+  <meta name="description" content="LinkLab turns long, messy web addresses into short links you can share. Anyone who opens a short link is redirected to the original page.">
+  <meta name="theme-color" content="#0b1023">
   <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/static/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/styles.css">
   <script src="/static/app.js" defer></script>
 </head>
 <body>
-  <!-- Icon sprite (inline SVG, no external icon fonts) -->
+  <!-- Icon sprite: inline SVG, no external icon fonts -->
   <svg xmlns="http://www.w3.org/2000/svg" class="sprite" aria-hidden="true" focusable="false">
     <defs>
+      <linearGradient id="brand-grad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#a855f7"/>
+      </linearGradient>
       <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></symbol>
       <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></symbol>
       <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
@@ -23,193 +27,337 @@
       <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
       <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/></symbol>
       <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></symbol>
+      <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></symbol>
       <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></symbol>
+      <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></symbol>
+      <symbol id="i-corner" viewBox="0 0 24 24"><path d="M5 4v7a4 4 0 0 0 4 4h11"/><path d="m15 10 5 5-5 5"/></symbol>
+      <symbol id="i-cursor" viewBox="0 0 24 24"><path d="m4 4 7 17 2.5-7.5L21 11 4 4z"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+      <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></symbol>
+      <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
       <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6.5A2.5 2.5 0 0 0 4 21.5v-2z"/><path d="M8 7h8"/></symbol>
+      <symbol id="i-scissors" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></symbol>
+      <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
     </defs>
   </svg>
 
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <header class="topbar">
-    <div class="container topbar-inner">
+  <!-- ============================== HERO ============================== -->
+  <div class="hero">
+    <header class="topbar container">
       <a class="brand" href="/" aria-label="LinkLab home">
-        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8"/><path d="M13.5 18.5a4 4 0 0 0 5.66 0l3.2-3.2a4 4 0 0 0-5.66-5.66l-1 1M18.5 13.5a4 4 0 0 0-5.66 0l-3.2 3.2a4 4 0 0 0 5.66 5.66l1-1"/></svg>
-        <span class="brand-name">LinkLab</span>
-        <span class="brand-tag">URL Shortener Service</span>
+        <svg class="logo" viewBox="0 0 40 40" aria-hidden="true">
+          <rect width="40" height="40" rx="11" fill="url(#brand-grad)"/>
+          <path d="M17.5 22.5a5 5 0 0 0 7.07 0l3.54-3.54a5 5 0 0 0-7.07-7.07l-1.06 1.06" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+          <path d="M22.5 17.5a5 5 0 0 0-7.07 0l-3.54 3.54a5 5 0 0 0 7.07 7.07l1.06-1.06" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="2.6" stroke-linecap="round"/>
+        </svg>
+        <span class="brand-name">Link<span>Lab</span></span>
       </a>
       <nav class="topnav" aria-label="Primary">
-        <a href="#links">Links</a>
-        <a href="/docs" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg>API docs</a>
-        <span id="health" class="health" data-state="loading" role="status">
-          <span class="dot" aria-hidden="true"></span><span class="health-text">Checking…</span>
+        <a href="#how" class="nav-link">How it works</a>
+        <a href="#links" class="nav-link">Dashboard</a>
+        <a href="/docs" class="nav-link" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg>API</a>
+        <span id="health" class="health" data-state="loading" role="status" title="Checking the service…">
+          <span class="dot" aria-hidden="true"></span><span class="health-text">Connecting</span>
         </span>
       </nav>
-    </div>
-  </header>
+    </header>
 
-  <main id="main" class="container" tabindex="-1">
-    <section class="panel shorten" aria-labelledby="shorten-title">
-      <div class="shorten-head">
-        <h1 id="shorten-title">Shorten a long URL</h1>
-        <p class="muted">Paste a link and get a short alias that redirects visitors through this service.</p>
-      </div>
+    <section class="hero-body container" aria-labelledby="hero-title">
+      <p class="hero-kicker"><svg class="icon" aria-hidden="true"><use href="#i-scissors"/></svg>Free URL shortener · no sign-up</p>
+      <h1 id="hero-title">Make long links <span class="hl">short &amp; shareable</span></h1>
+      <p class="hero-lead">Paste any web address and get a short link in one click. Whoever opens it is sent straight to the original page, and LinkLab counts every visit.</p>
 
-      <form id="shorten-form" novalidate>
-        <label for="url-input" class="label">Long URL</label>
-        <div class="input-row">
-          <div class="input-icon">
-            <svg class="icon" aria-hidden="true"><use href="#i-link"/></svg>
-            <input id="url-input" name="url" type="url" inputmode="url" autocomplete="off" spellcheck="false"
-                   maxlength="2048" required placeholder="https://example.com/a/very/long/page?campaign=autumn"
-                   aria-describedby="url-hint url-error">
+      <div class="composer" id="composer">
+        <form id="shorten-form" novalidate>
+          <label for="url-input" class="composer-label">Paste your long link</label>
+          <div class="composer-row">
+            <div class="url-field">
+              <svg class="icon" aria-hidden="true"><use href="#i-link"/></svg>
+              <input id="url-input" name="url" type="url" inputmode="url" autocomplete="off" spellcheck="false"
+                     maxlength="2048" required placeholder="https://www.example.com/a/very/long/page?ref=newsletter"
+                     aria-describedby="url-error url-hint">
+            </div>
+            <button class="btn btn-primary btn-xl" id="submit-btn" type="submit">
+              <span class="spinner" aria-hidden="true"></span>
+              <span class="btn-label">Shorten link</span>
+              <svg class="icon btn-arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </button>
           </div>
-          <button class="btn btn-primary btn-lg" id="submit-btn" type="submit">
-            <span class="spinner" aria-hidden="true"></span>
-            <span class="btn-label">Shorten URL</span>
-          </button>
-        </div>
-        <p id="url-hint" class="hint">Only <code>http://</code> and <code>https://</code> links, up to 2,048 characters.</p>
-        <p id="url-error" class="field-error" hidden></p>
+          <p id="url-error" class="field-error" hidden></p>
 
-        <details class="advanced" id="advanced">
-          <summary>Advanced options <span class="muted">— custom alias, expiry</span></summary>
-          <div class="advanced-grid">
+          <div class="composer-foot">
+            <button type="button" class="toggle" id="advanced-toggle" aria-expanded="false" aria-controls="advanced">
+              <svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg>
+              Customize your link
+              <svg class="icon chevron" aria-hidden="true"><use href="#i-chevron"/></svg>
+            </button>
+            <p id="url-hint" class="hint">Works with any address starting with <b>http://</b> or <b>https://</b></p>
+          </div>
+
+          <div class="advanced" id="advanced" hidden>
             <div class="field">
-              <label for="alias-input" class="label">Custom alias <span class="optional">optional</span></label>
+              <label for="alias-input" class="label">Custom name <span class="optional">optional</span></label>
               <div class="prefixed">
                 <span class="prefix" id="alias-prefix" aria-hidden="true">/</span>
                 <input id="alias-input" name="custom_alias" type="text" autocomplete="off" spellcheck="false"
-                       maxlength="30" placeholder="spring-sale" aria-describedby="alias-hint alias-error">
+                       maxlength="30" placeholder="summer-sale" aria-describedby="alias-hint alias-error">
               </div>
-              <p id="alias-hint" class="hint">3–30 characters: letters, numbers, <code>-</code> or <code>_</code>. Case-sensitive.</p>
+              <p id="alias-hint" class="hint">Pick a memorable name: 3–30 letters, numbers, - or _. Leave empty for a random one.</p>
               <p id="alias-error" class="field-error" hidden></p>
             </div>
             <div class="field">
-              <label for="expiry-select" class="label">Expiry</label>
+              <label for="expiry-select" class="label">Link stops working</label>
               <select id="expiry-select" name="expires_in_minutes" aria-describedby="expiry-hint">
-                <option value="">Never expires</option>
+                <option value="">Never</option>
                 <option value="60">After 1 hour</option>
-                <option value="1440">After 24 hours</option>
+                <option value="1440">After 1 day</option>
                 <option value="10080">After 7 days</option>
                 <option value="43200">After 30 days</option>
               </select>
-              <p id="expiry-hint" class="hint">Expired links stay listed but stop redirecting.</p>
+              <p id="expiry-hint" class="hint">After this time the link shows an “expired” page instead.</p>
             </div>
           </div>
-        </details>
 
-        <div id="form-error" class="alert alert-error" role="alert" hidden>
-          <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span></span>
-        </div>
-      </form>
+          <div id="form-error" class="alert" role="alert" hidden>
+            <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span></span>
+          </div>
+        </form>
 
-      <div id="result" class="result" hidden>
-        <div class="result-body">
-          <p class="eyebrow"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Short link created</p>
-          <a id="result-link" class="result-link" target="_blank" rel="noopener noreferrer"></a>
-          <dl class="result-meta">
-            <div><dt>Redirects to</dt><dd id="result-dest" class="break"></dd></div>
-            <div><dt>Expires</dt><dd id="result-expiry"></dd></div>
-          </dl>
-          <div class="actions">
-            <button type="button" class="btn btn-secondary" id="result-copy">
-              <svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy link</span>
-            </button>
-            <a class="btn btn-ghost" id="result-open" target="_blank" rel="noopener noreferrer">
-              <svg class="icon" aria-hidden="true"><use href="#i-external"/></svg>Open
-            </a>
+        <!-- Result: filled from the real API response -->
+        <div id="result" class="result" hidden tabindex="-1" aria-labelledby="result-title">
+          <div class="result-head">
+            <span class="result-check"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>
+            <div>
+              <h2 id="result-title">Your short link is ready</h2>
+              <p class="result-sub">Share it anywhere. It opens <span id="result-domain" class="strong"></span>.</p>
+            </div>
+          </div>
+
+          <div class="result-grid">
+            <div class="result-main">
+              <div class="short-box">
+                <a id="result-link" class="short-url" target="_blank" rel="noopener noreferrer"></a>
+                <button type="button" class="btn btn-primary" id="result-copy">
+                  <svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span>
+                </button>
+              </div>
+
+              <div class="compare" aria-label="Before and after">
+                <div class="compare-row">
+                  <span class="compare-tag">Before</span>
+                  <span class="compare-url long" id="result-dest"></span>
+                  <span class="compare-count" id="result-long-count"></span>
+                </div>
+                <div class="compare-row">
+                  <span class="compare-tag tag-after">After</span>
+                  <span class="compare-url short" id="result-short-text"></span>
+                  <span class="compare-count" id="result-short-count"></span>
+                </div>
+                <div class="savings" id="savings">
+                  <div class="savings-track"><span class="savings-fill" id="savings-fill"></span></div>
+                  <p id="savings-text"></p>
+                </div>
+              </div>
+
+              <div class="result-actions">
+                <a class="btn btn-secondary" id="result-open" target="_blank" rel="noopener noreferrer">
+                  <svg class="icon" aria-hidden="true"><use href="#i-external"/></svg>Test the link
+                </a>
+                <button type="button" class="btn btn-ghost" id="result-new">
+                  <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Shorten another
+                </button>
+                <span class="result-expiry" id="result-expiry-wrap">
+                  <svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg><span id="result-expiry"></span>
+                </span>
+              </div>
+            </div>
+
+            <figure class="result-qr">
+              <img id="result-qr" width="132" height="132" alt="">
+              <figcaption>
+                Scan to open on a phone
+                <a id="result-qr-download" download><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>Download QR</a>
+              </figcaption>
+            </figure>
           </div>
         </div>
-        <figure class="result-qr">
-          <img id="result-qr" width="128" height="128" alt="">
-          <figcaption><a id="result-qr-download" download>
-            <svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>QR code (SVG)</a></figcaption>
-        </figure>
       </div>
+
+      <ul class="hero-points" aria-label="Features">
+        <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Instant redirects</li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Custom link names</li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>QR code for every link</li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Visit counter</li>
+      </ul>
+    </section>
+  </div>
+
+  <!-- ============================== CONTENT ============================== -->
+  <main id="main" tabindex="-1">
+    <section id="how" class="section container" aria-labelledby="how-title">
+      <div class="section-head center">
+        <p class="eyebrow">How it works</p>
+        <h2 id="how-title">From a long address to a short link in three steps</h2>
+      </div>
+      <ol class="steps">
+        <li class="step">
+          <span class="step-num">1</span>
+          <h3>Paste your long link</h3>
+          <p>Copy the address of any web page and paste it into the box above.</p>
+          <div class="step-demo"><span class="demo-long">example.com/blog/2026/how-we-planned-our-trip?utm_source=…</span></div>
+        </li>
+        <li class="step">
+          <span class="step-num">2</span>
+          <h3>Get a short link</h3>
+          <p>LinkLab creates a unique short name (or uses yours) and saves the pair.</p>
+          <div class="step-demo"><span class="demo-short" id="demo-short">/trip-plan</span></div>
+        </li>
+        <li class="step">
+          <span class="step-num">3</span>
+          <h3>Share it, we redirect</h3>
+          <p>When someone opens the short link, LinkLab looks it up and forwards them to the original page.</p>
+          <div class="step-demo flow"><span>Visitor</span><svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg><span>LinkLab</span><svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg><span>Original page</span></div>
+        </li>
+      </ol>
     </section>
 
-    <section class="stats" aria-labelledby="stats-title">
-      <h2 id="stats-title" class="visually-hidden">Summary</h2>
-      <div class="stat-grid" id="stat-grid" aria-busy="true">
-        <article class="stat">
-          <h3 class="stat-label">Stored links</h3>
-          <p class="stat-value" id="stat-total">—</p>
-          <p class="stat-sub" id="stat-total-sub">&nbsp;</p>
-        </article>
-        <article class="stat">
-          <h3 class="stat-label">Total clicks</h3>
-          <p class="stat-value" id="stat-clicks">—</p>
-          <p class="stat-sub">Redirects recorded</p>
-        </article>
-        <article class="stat">
-          <h3 class="stat-label">Created in last 24h</h3>
-          <p class="stat-value" id="stat-recent">—</p>
-          <p class="stat-sub">New short links</p>
-        </article>
-        <article class="stat">
-          <h3 class="stat-label">Top link</h3>
-          <p class="stat-value stat-value-code" id="stat-top">—</p>
-          <p class="stat-sub" id="stat-top-sub">&nbsp;</p>
-        </article>
-      </div>
-    </section>
-
-    <section id="links" class="panel" aria-labelledby="links-title">
-      <div class="panel-head">
+    <section id="links" class="section container" aria-labelledby="links-title">
+      <div class="section-head">
         <div>
-          <h2 id="links-title">Links</h2>
-          <p class="muted" id="links-count" aria-live="polite">Loading…</p>
-        </div>
-        <div class="toolbar">
-          <div class="input-icon search">
-            <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
-            <label for="search" class="visually-hidden">Search links</label>
-            <input id="search" type="search" placeholder="Search alias or destination" autocomplete="off">
-          </div>
-          <label for="sort" class="visually-hidden">Sort links</label>
-          <select id="sort">
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-            <option value="clicks">Most clicks</option>
-            <option value="alias">Alias A–Z</option>
-          </select>
-          <button type="button" class="btn btn-icon" id="refresh" aria-label="Refresh links" title="Refresh">
-            <svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>
-          </button>
+          <p class="eyebrow">Dashboard</p>
+          <h2 id="links-title">Link activity</h2>
+          <p class="section-sub">Every short link on this service and how many times people have opened it.</p>
         </div>
       </div>
 
-      <div id="table-state" class="table-state" role="status"></div>
+      <div class="stat-grid" id="stat-grid" aria-busy="true">
+        <article class="stat tone-indigo">
+          <span class="stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-link"/></svg></span>
+          <div class="stat-body">
+            <h3 class="stat-label">Short links</h3>
+            <p class="stat-value" id="stat-total">0</p>
+            <p class="stat-sub" id="stat-total-sub">Links created so far</p>
+          </div>
+        </article>
+        <article class="stat tone-violet">
+          <span class="stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-cursor"/></svg></span>
+          <div class="stat-body">
+            <h3 class="stat-label">Total visits</h3>
+            <p class="stat-value" id="stat-clicks">0</p>
+            <p class="stat-sub">Times a short link was opened</p>
+          </div>
+        </article>
+        <article class="stat tone-sky">
+          <span class="stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg></span>
+          <div class="stat-body">
+            <h3 class="stat-label">New today</h3>
+            <p class="stat-value" id="stat-recent">0</p>
+            <p class="stat-sub">Created in the last 24 hours</p>
+          </div>
+        </article>
+        <article class="stat tone-amber">
+          <span class="stat-icon"><svg class="icon" aria-hidden="true"><use href="#i-trophy"/></svg></span>
+          <div class="stat-body">
+            <h3 class="stat-label">Most visited</h3>
+            <p class="stat-value stat-value-code" id="stat-top">—</p>
+            <p class="stat-sub" id="stat-top-sub">No visits yet</p>
+          </div>
+        </article>
+      </div>
 
-      <div class="table-wrap">
-        <table class="links-table" id="links-table" hidden>
-          <thead>
-            <tr>
-              <th scope="col">Short link</th>
-              <th scope="col">Destination</th>
-              <th scope="col">Created</th>
-              <th scope="col">Status</th>
-              <th scope="col" class="num">Clicks</th>
-              <th scope="col"><span class="visually-hidden">Actions</span></th>
-            </tr>
-          </thead>
-          <tbody id="links-body"></tbody>
-        </table>
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h3 class="panel-title">All links</h3>
+            <p class="panel-sub" id="links-count" aria-live="polite">Loading…</p>
+          </div>
+          <div class="toolbar">
+            <div class="search">
+              <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+              <label for="search" class="visually-hidden">Search links</label>
+              <input id="search" type="search" placeholder="Search links…" autocomplete="off">
+            </div>
+            <label for="sort" class="visually-hidden">Sort links</label>
+            <select id="sort">
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="clicks">Most visited</option>
+              <option value="alias">Name A–Z</option>
+            </select>
+            <button type="button" class="btn btn-icon" id="refresh" aria-label="Refresh" data-tip="Refresh">
+              <svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="table-state" class="table-state" role="status"></div>
+
+        <div class="table-wrap">
+          <table class="links-table" id="links-table" hidden>
+            <thead>
+              <tr>
+                <th scope="col">Short link &amp; destination</th>
+                <th scope="col">Visits</th>
+                <th scope="col">Created</th>
+                <th scope="col">Status</th>
+                <th scope="col" class="th-actions"><span class="visually-hidden">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody id="links-body"></tbody>
+          </table>
+        </div>
+
+        <p class="panel-note">
+          <svg class="icon" aria-hidden="true"><use href="#i-info"/></svg>
+          This demo keeps links in temporary memory, so they are cleared whenever the server restarts.
+        </p>
       </div>
     </section>
   </main>
 
-  <footer class="container footer">
-    <p>Links live in an <strong>in-memory SQLite</strong> database inside this container and are cleared whenever the service restarts.</p>
-    <p><a href="/docs" target="_blank" rel="noopener">Swagger UI</a> · <a href="/redoc" target="_blank" rel="noopener">ReDoc</a> · <a href="/health" target="_blank" rel="noopener">Health</a></p>
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="brand brand-sm" href="/" aria-label="LinkLab home">
+          <svg class="logo" viewBox="0 0 40 40" aria-hidden="true">
+            <rect width="40" height="40" rx="11" fill="url(#brand-grad)"/>
+            <path d="M17.5 22.5a5 5 0 0 0 7.07 0l3.54-3.54a5 5 0 0 0-7.07-7.07l-1.06 1.06" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+            <path d="M22.5 17.5a5 5 0 0 0-7.07 0l-3.54 3.54a5 5 0 0 0 7.07 7.07l1.06-1.06" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="2.6" stroke-linecap="round"/>
+          </svg>
+          <span class="brand-name">Link<span>Lab</span></span>
+        </a>
+        <p>A minimal service that redirects long URLs to short aliases.</p>
+      </div>
+      <div>
+        <h4>Under the hood</h4>
+        <ul class="tech">
+          <li><span class="chip">FastAPI</span> lightweight REST API</li>
+          <li><span class="chip">SQLite</span> in-memory database</li>
+          <li><span class="chip">Docker</span> one single container</li>
+        </ul>
+      </div>
+      <div>
+        <h4>For developers</h4>
+        <ul class="footer-links">
+          <li><a href="/docs" target="_blank" rel="noopener">Interactive API docs</a></li>
+          <li><a href="/redoc" target="_blank" rel="noopener">API reference</a></li>
+          <li><a href="/health" target="_blank" rel="noopener">Service health</a></li>
+        </ul>
+      </div>
+    </div>
   </footer>
 
   <dialog id="delete-dialog" class="dialog" aria-labelledby="delete-title">
     <form method="dialog">
+      <span class="dialog-icon danger"><svg class="icon" aria-hidden="true"><use href="#i-trash"/></svg></span>
       <h2 id="delete-title">Delete this link?</h2>
-      <p><code id="delete-code" class="code-pill"></code> will stop redirecting immediately and its click count will be lost. This cannot be undone.</p>
+      <p><code id="delete-code" class="code-pill"></code> will stop working immediately and its visit count will be lost. This can’t be undone.</p>
       <div class="dialog-actions">
-        <button class="btn btn-secondary" value="cancel" autofocus>Cancel</button>
+        <button class="btn btn-secondary" value="cancel" autofocus>Keep link</button>
         <button class="btn btn-danger" value="confirm" id="delete-confirm">Delete link</button>
       </div>
     </form>
@@ -217,12 +365,13 @@
 
   <dialog id="qr-dialog" class="dialog dialog-qr" aria-labelledby="qr-title">
     <form method="dialog">
-      <h2 id="qr-title">QR code</h2>
+      <h2 id="qr-title">Scan to open</h2>
+      <p>Point a phone camera at this code to open the short link.</p>
       <img id="qr-image" width="220" height="220" alt="">
-      <p class="qr-url break" id="qr-url"></p>
-      <div class="dialog-actions">
+      <p class="qr-url" id="qr-url"></p>
+      <div class="dialog-actions center">
         <a class="btn btn-secondary" id="qr-download" download>
-          <svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>Download SVG</a>
+          <svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>Download</a>
         <button class="btn btn-primary" value="close">Done</button>
       </div>
     </form>

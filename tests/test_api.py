@@ -503,7 +503,7 @@ def test_frontend_is_served(client):
     assert page.status_code == 200
     assert "LinkLab" in page.text
     for asset, media in [("/static/app.js", "javascript"), ("/static/styles.css", "text/css"),
-                         ("/static/favicon.svg", "image/svg+xml")]:
+                         ("/static/favicon.svg", "image/svg+xml"), ("/static/fonts/inter-latin.woff2", "font/woff2")]:
         response = client.get(asset)
         assert response.status_code == 200, asset
         assert media in response.headers["content-type"]

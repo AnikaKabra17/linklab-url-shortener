@@ -11,6 +11,7 @@ from __future__ import annotations
 import html
 import io
 import logging
+import mimetypes
 import os
 import sqlite3
 from collections.abc import Callable
@@ -33,6 +34,7 @@ from .ratelimit import RateLimiter
 logger = logging.getLogger("uvicorn.error")  # shows up in the Uvicorn / container logs
 
 STATIC_DIR = Path(__file__).parent / "static"
+mimetypes.add_type("font/woff2", ".woff2")  # not in every OS mime table (e.g. slim images)
 API_VERSION = "2.0.0"
 
 # Pages we serve ourselves get a strict CSP. Swagger UI (/docs) and ReDoc load
@@ -292,11 +294,12 @@ def create_app(
             destination = services.resolve_redirect(request.app.state.db, short_code, request.app.state.clock())
         except services.LinkNotFound:
             return _error_page(request, 404, "Link not found",
-                               f"No short link named “{short_code}” exists. It may have been deleted, "
-                               "or the service may have restarted (links are kept in memory only).")
+                               f"There is no short link called “{short_code}”. Check the spelling, or it may "
+                               "have been deleted. Links are also cleared whenever the service restarts.")
         except services.LinkExpired:
             return _error_page(request, 410, "This link has expired",
-                               f"The short link “{short_code}” has passed its expiry time and no longer redirects.")
+                               f"The short link “{short_code}” was set to stop working after a certain time, "
+                               "so it no longer opens its destination.")
         # 307 = temporary: browsers must come back each time, so every visit is counted.
         return RedirectResponse(destination, status_code=307, headers={"Cache-Control": "no-store"})
 
@@ -314,10 +317,11 @@ ERROR_PAGE = """<!doctype html>
 </head>
 <body class="status-page">
 <main class="status-card">
-  <p class="status-code">{status}</p>
+  <svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs><rect width="40" height="40" rx="11" fill="url(#g)"/><path d="M17.5 22.5a5 5 0 0 0 7.07 0l3.54-3.54a5 5 0 0 0-7.07-7.07l-1.06 1.06M22.5 17.5a5 5 0 0 0-7.07 0l-3.54 3.54a5 5 0 0 0 7.07 7.07l1.06-1.06" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>
+  <p class="status-code">Error {status}</p>
   <h1>{title}</h1>
   <p>{message}</p>
-  <a class="btn btn-primary" href="/">Go to LinkLab</a>
+  <a class="btn btn-primary" href="/">Create a new short link</a>
 </main>
 </body>
 </html>
