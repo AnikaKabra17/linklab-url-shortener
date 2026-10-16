@@ -1,0 +1,13 @@
+# Convenience wrapper that builds and runs the SAME single container.
+# There is intentionally no database service: SQLite runs in memory inside it.
+services:
+  linklab:
+    build: .
+    image: linklab
+    container_name: linklab
+    ports:
+      - "8000:8000"
+    environment:
+      RATE_LIMIT_PER_MINUTE: "30"
+    # Note: any restart starts with an empty in-memory database.
+    restart: unless-stopped

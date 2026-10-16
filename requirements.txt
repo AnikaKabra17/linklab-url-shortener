@@ -1,0 +1,4 @@
+# Runtime dependencies (installed in the Docker image)
+fastapi==0.143.2
+uvicorn[standard]==0.54.0
+segno==1.6.6  # pure-Python QR code generator, no system libraries needed

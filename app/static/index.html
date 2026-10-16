@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LinkLab — URL Shortener Service</title>
+  <meta name="description" content="LinkLab turns long URLs into short aliases that redirect through a lightweight FastAPI service.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <!-- Icon sprite (inline SVG, no external icon fonts) -->
+  <svg xmlns="http://www.w3.org/2000/svg" class="sprite" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+      <symbol id="i-external" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
+      <symbol id="i-qr" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></symbol>
+      <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6.5A2.5 2.5 0 0 0 4 21.5v-2z"/><path d="M8 7h8"/></symbol>
+    </defs>
+  </svg>
+
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" href="/" aria-label="LinkLab home">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8"/><path d="M13.5 18.5a4 4 0 0 0 5.66 0l3.2-3.2a4 4 0 0 0-5.66-5.66l-1 1M18.5 13.5a4 4 0 0 0-5.66 0l-3.2 3.2a4 4 0 0 0 5.66 5.66l1-1"/></svg>
+        <span class="brand-name">LinkLab</span>
+        <span class="brand-tag">URL Shortener Service</span>
+      </a>
+      <nav class="topnav" aria-label="Primary">
+        <a href="#links">Links</a>
+        <a href="/docs" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg>API docs</a>
+        <span id="health" class="health" data-state="loading" role="status">
+          <span class="dot" aria-hidden="true"></span><span class="health-text">Checking…</span>
+        </span>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="container" tabindex="-1">
+    <section class="panel shorten" aria-labelledby="shorten-title">
+      <div class="shorten-head">
+        <h1 id="shorten-title">Shorten a long URL</h1>
+        <p class="muted">Paste a link and get a short alias that redirects visitors through this service.</p>
+      </div>
+
+      <form id="shorten-form" novalidate>
+        <label for="url-input" class="label">Long URL</label>
+        <div class="input-row">
+          <div class="input-icon">
+            <svg class="icon" aria-hidden="true"><use href="#i-link"/></svg>
+            <input id="url-input" name="url" type="url" inputmode="url" autocomplete="off" spellcheck="false"
+                   maxlength="2048" required placeholder="https://example.com/a/very/long/page?campaign=autumn"
+                   aria-describedby="url-hint url-error">
+          </div>
+          <button class="btn btn-primary btn-lg" id="submit-btn" type="submit">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="btn-label">Shorten URL</span>
+          </button>
+        </div>
+        <p id="url-hint" class="hint">Only <code>http://</code> and <code>https://</code> links, up to 2,048 characters.</p>
+        <p id="url-error" class="field-error" hidden></p>
+
+        <details class="advanced" id="advanced">
+          <summary>Advanced options <span class="muted">— custom alias, expiry</span></summary>
+          <div class="advanced-grid">
+            <div class="field">
+              <label for="alias-input" class="label">Custom alias <span class="optional">optional</span></label>
+              <div class="prefixed">
+                <span class="prefix" id="alias-prefix" aria-hidden="true">/</span>
+                <input id="alias-input" name="custom_alias" type="text" autocomplete="off" spellcheck="false"
+                       maxlength="30" placeholder="spring-sale" aria-describedby="alias-hint alias-error">
+              </div>
+              <p id="alias-hint" class="hint">3–30 characters: letters, numbers, <code>-</code> or <code>_</code>. Case-sensitive.</p>
+              <p id="alias-error" class="field-error" hidden></p>
+            </div>
+            <div class="field">
+              <label for="expiry-select" class="label">Expiry</label>
+              <select id="expiry-select" name="expires_in_minutes" aria-describedby="expiry-hint">
+                <option value="">Never expires</option>
+                <option value="60">After 1 hour</option>
+                <option value="1440">After 24 hours</option>
+                <option value="10080">After 7 days</option>
+                <option value="43200">After 30 days</option>
+              </select>
+              <p id="expiry-hint" class="hint">Expired links stay listed but stop redirecting.</p>
+            </div>
+          </div>
+        </details>
+
+        <div id="form-error" class="alert alert-error" role="alert" hidden>
+          <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span></span>
+        </div>
+      </form>
+
+      <div id="result" class="result" hidden>
+        <div class="result-body">
+          <p class="eyebrow"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Short link created</p>
+          <a id="result-link" class="result-link" target="_blank" rel="noopener noreferrer"></a>
+          <dl class="result-meta">
+            <div><dt>Redirects to</dt><dd id="result-dest" class="break"></dd></div>
+            <div><dt>Expires</dt><dd id="result-expiry"></dd></div>
+          </dl>
+          <div class="actions">
+            <button type="button" class="btn btn-secondary" id="result-copy">
+              <svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy link</span>
+            </button>
+            <a class="btn btn-ghost" id="result-open" target="_blank" rel="noopener noreferrer">
+              <svg class="icon" aria-hidden="true"><use href="#i-external"/></svg>Open
+            </a>
+          </div>
+        </div>
+        <figure class="result-qr">
+          <img id="result-qr" width="128" height="128" alt="">
+          <figcaption><a id="result-qr-download" download>
+            <svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>QR code (SVG)</a></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="stats" aria-labelledby="stats-title">
+      <h2 id="stats-title" class="visually-hidden">Summary</h2>
+      <div class="stat-grid" id="stat-grid" aria-busy="true">
+        <article class="stat">
+          <h3 class="stat-label">Stored links</h3>
+          <p class="stat-value" id="stat-total">—</p>
+          <p class="stat-sub" id="stat-total-sub">&nbsp;</p>
+        </article>
+        <article class="stat">
+          <h3 class="stat-label">Total clicks</h3>
+          <p class="stat-value" id="stat-clicks">—</p>
+          <p class="stat-sub">Redirects recorded</p>
+        </article>
+        <article class="stat">
+          <h3 class="stat-label">Created in last 24h</h3>
+          <p class="stat-value" id="stat-recent">—</p>
+          <p class="stat-sub">New short links</p>
+        </article>
+        <article class="stat">
+          <h3 class="stat-label">Top link</h3>
+          <p class="stat-value stat-value-code" id="stat-top">—</p>
+          <p class="stat-sub" id="stat-top-sub">&nbsp;</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="links" class="panel" aria-labelledby="links-title">
+      <div class="panel-head">
+        <div>
+          <h2 id="links-title">Links</h2>
+          <p class="muted" id="links-count" aria-live="polite">Loading…</p>
+        </div>
+        <div class="toolbar">
+          <div class="input-icon search">
+            <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+            <label for="search" class="visually-hidden">Search links</label>
+            <input id="search" type="search" placeholder="Search alias or destination" autocomplete="off">
+          </div>
+          <label for="sort" class="visually-hidden">Sort links</label>
+          <select id="sort">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="clicks">Most clicks</option>
+            <option value="alias">Alias A–Z</option>
+          </select>
+          <button type="button" class="btn btn-icon" id="refresh" aria-label="Refresh links" title="Refresh">
+            <svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="table-state" class="table-state" role="status"></div>
+
+      <div class="table-wrap">
+        <table class="links-table" id="links-table" hidden>
+          <thead>
+            <tr>
+              <th scope="col">Short link</th>
+              <th scope="col">Destination</th>
+              <th scope="col">Created</th>
+              <th scope="col">Status</th>
+              <th scope="col" class="num">Clicks</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="links-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container footer">
+    <p>Links live in an <strong>in-memory SQLite</strong> database inside this container and are cleared whenever the service restarts.</p>
+    <p><a href="/docs" target="_blank" rel="noopener">Swagger UI</a> · <a href="/redoc" target="_blank" rel="noopener">ReDoc</a> · <a href="/health" target="_blank" rel="noopener">Health</a></p>
+  </footer>
+
+  <dialog id="delete-dialog" class="dialog" aria-labelledby="delete-title">
+    <form method="dialog">
+      <h2 id="delete-title">Delete this link?</h2>
+      <p><code id="delete-code" class="code-pill"></code> will stop redirecting immediately and its click count will be lost. This cannot be undone.</p>
+      <div class="dialog-actions">
+        <button class="btn btn-secondary" value="cancel" autofocus>Cancel</button>
+        <button class="btn btn-danger" value="confirm" id="delete-confirm">Delete link</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="qr-dialog" class="dialog dialog-qr" aria-labelledby="qr-title">
+    <form method="dialog">
+      <h2 id="qr-title">QR code</h2>
+      <img id="qr-image" width="220" height="220" alt="">
+      <p class="qr-url break" id="qr-url"></p>
+      <div class="dialog-actions">
+        <a class="btn btn-secondary" id="qr-download" download>
+          <svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>Download SVG</a>
+        <button class="btn btn-primary" value="close">Done</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+</body>
+</html>
